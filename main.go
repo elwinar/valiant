@@ -1,9 +1,10 @@
 package main
 
 import (
+	"crypto/tls"
 	"fmt"
 	"github.com/codegangsta/cli"
-	"gopkg.in/gomail.v1"
+	mail "gopkg.in/gomail.v1"
 	"io/ioutil"
 	"os"
 )
@@ -59,7 +60,7 @@ func action(ctx *cli.Context) {
 	
 	_, _, error := Bootstrap(ctx, &cfg)
 	
-	message := gomail.NewMessage()
+	message := mail.NewMessage()
 	message.SetHeader("From", fmt.Sprintf("%s <%s>", cfg.From.Name, cfg.From.Address))
 	
 	var to []string
@@ -75,7 +76,15 @@ func action(ctx *cli.Context) {
 	}
 	message.SetBody("text/html", string(body))
 	
-	mailer := gomail.NewMailer(cfg.Server.Host, cfg.Server.User, cfg.Server.Password, cfg.Server.Port)
+	var settings []mail.MailerSetting
+	if cfg.Server.TLS {
+		settings = append(settings, mail.SetTLSConfig(&tls.Config {
+			InsecureSkipVerify: true,
+			ServerName: cfg.Server.Host,
+		}))
+	}
+	mailer := mail.NewMailer(cfg.Server.Host, cfg.Server.User, cfg.Server.Password, cfg.Server.Port, settings...)
+	
 	if err := mailer.Send(message); err != nil {
 		error.Fatalln("Unable to send message:", err)
 	}
