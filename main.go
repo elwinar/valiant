@@ -13,16 +13,16 @@ type Configuration struct {
 	Server struct {
 		TLS      bool   `json:"tls"`
 		Host     string `json:"host"`
-		Port     int  `json:"port"`
+		Port     int    `json:"port"`
 		User     string `json:"user"`
 		Password string `json:"password"`
 	} `json:"server"`
 	From struct {
-		Name string `json:"name"`
+		Name    string `json:"name"`
 		Address string `json:"address"`
 	} `json:"from"`
 	To []struct {
-		Name string `json:"name"`
+		Name    string `json:"name"`
 		Address string `json:"address"`
 	} `json:"to"`
 }
@@ -45,7 +45,7 @@ func main() {
 			Usage: "body file",
 		},
 		cli.StringFlag{
-			Name: "subject,s",
+			Name:  "subject,s",
 			Usage: "message subject",
 		},
 	}
@@ -57,39 +57,39 @@ func main() {
 func action(ctx *cli.Context) {
 	var cfg Configuration
 	var err error
-	
+
 	err = Load(ctx.String("configuration"), &cfg)
 	if err != nil {
 		fmt.Println("Unable to load configuration:", err)
 		return
 	}
-	
+
 	message := mail.NewMessage()
 	message.SetHeader("From", fmt.Sprintf("%s <%s>", cfg.From.Name, cfg.From.Address))
-	
+
 	var to []string
 	for _, t := range cfg.To {
 		to = append(to, fmt.Sprintf("%s <%s>", t.Name, t.Address))
 	}
 	message.SetHeader("To", to...)
 	message.SetHeader("Subject", ctx.String("subject"))
-	
+
 	body, err := ioutil.ReadFile(ctx.String("body"))
 	if err != nil {
 		fmt.Println("Unable to load body:", err)
 		return
 	}
 	message.SetBody("text/html", string(body))
-	
+
 	var settings []mail.MailerSetting
 	if cfg.Server.TLS {
-		settings = append(settings, mail.SetTLSConfig(&tls.Config {
+		settings = append(settings, mail.SetTLSConfig(&tls.Config{
 			InsecureSkipVerify: true,
-			ServerName: cfg.Server.Host,
+			ServerName:         cfg.Server.Host,
 		}))
 	}
 	mailer := mail.NewMailer(cfg.Server.Host, cfg.Server.User, cfg.Server.Password, cfg.Server.Port, settings...)
-	
+
 	if err := mailer.Send(message); err != nil {
 		fmt.Println("Unable to deliver mail:", err)
 		return
