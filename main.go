@@ -58,7 +58,11 @@ func action(ctx *cli.Context) {
 	var cfg Configuration
 	var err error
 	
-	_, _, error := Bootstrap(ctx, &cfg)
+	err = Load(ctx.String("configuration"), &cfg)
+	if err != nil {
+		fmt.Println("Unable to load configuration:", err)
+		return
+	}
 	
 	message := mail.NewMessage()
 	message.SetHeader("From", fmt.Sprintf("%s <%s>", cfg.From.Name, cfg.From.Address))
@@ -72,7 +76,8 @@ func action(ctx *cli.Context) {
 	
 	body, err := ioutil.ReadFile(ctx.String("body"))
 	if err != nil {
-		error.Fatalln("Unable to read body file:", err)
+		fmt.Println("Unable to load body:", err)
+		return
 	}
 	message.SetBody("text/html", string(body))
 	
@@ -86,6 +91,7 @@ func action(ctx *cli.Context) {
 	mailer := mail.NewMailer(cfg.Server.Host, cfg.Server.User, cfg.Server.Password, cfg.Server.Port, settings...)
 	
 	if err := mailer.Send(message); err != nil {
-		error.Fatalln("Unable to send message:", err)
+		fmt.Println("Unable to deliver mail:", err)
+		return
 	}
 }
