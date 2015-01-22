@@ -33,7 +33,7 @@ func main() {
 	app.Usage = "A brave mail pigeon"
 	app.Author = "Romain Baugue"
 	app.Email = "romain.baugue@elwinar.com"
-	app.Version = "1-dev"
+	app.Version = "1"
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
 			Name:  "configuration,c",
